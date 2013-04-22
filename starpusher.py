@@ -553,6 +553,10 @@ def floodFill(mapObj, x, y, oldCharacter, newCharacter):
     # floor distinction. This is a "recursive" function.
     # For more info on the Flood Fill algorithm, see:
     #   http://en.wikipedia.org/wiki/Flood_fill
+    
+    
+    #-Derek I flipped all the signs so now they populated the inside tiles
+    # with grass and rocks/ No collision....... yet
     if mapObj[x][y] == oldCharacter:
         mapObj[x][y] = newCharacter
 
