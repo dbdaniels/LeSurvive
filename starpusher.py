@@ -1,8 +1,8 @@
-# Star Pusher (a Sokoban clone)
+# there got all of da files
+# Try to run just for shiggles
 # By Al Sweigart al@inventwithpython.com
 # http://inventwithpython.com/pygame
-# Released under a "Simplified BSD" license
-
+# Released under a "Simplified BSD" lice
 import random, sys, copy, os, pygame
 from pygame.locals import *
 
@@ -16,8 +16,8 @@ HALF_WINHEIGHT = int(WINHEIGHT / 2)
 TILEWIDTH = 50
 TILEHEIGHT = 85
 TILEFLOORHEIGHT = 40
-
-CAM_MOVE_SPEED = 5 # how many pixels per frame the camera moves
+# -grayson: changed the speed of the camera from fricking hyper mode: orignal 5
+CAM_MOVE_SPEED = 2 # how many pixels per frame the camera moves
 
 # The percentage of outdoor tiles that have additional
 # decoration on them, such as a tree or rock.
@@ -32,10 +32,11 @@ UP = 'up'
 DOWN = 'down'
 LEFT = 'left'
 RIGHT = 'right'
-
+# -grayson: created lookDir for the player for direction management and added inventory system
+lookDir = 'forward'
 
 def main():
-    global FPSCLOCK, DISPLAYSURF, IMAGESDICT, TILEMAPPING, OUTSIDEDECOMAPPING, BASICFONT, PLAYERIMAGES, currentImage
+    global FPSCLOCK, DISPLAYSURF, IMAGESDICT, TILEMAPPING, OUTSIDEDECOMAPPING, BASICFONT, PLAYERIMAGES, currentImage, lookDir
 
     # Pygame initialization and basic set up of the global variables.
     pygame.init()
@@ -57,8 +58,8 @@ def main():
                   'star': pygame.image.load('Star.png'),
                   'corner': pygame.image.load('Wall_Block_Tall.png'),
                   'wall': pygame.image.load('Wood_Block_Tall.png'),
-                  'inside floor': pygame.image.load('Plain_Block.png'),
-                  'outside floor': pygame.image.load('Grass_Block.png'),
+                  'paved_floor': pygame.image.load('Plain_Block.png'),
+                  'grass_floor': pygame.image.load('Grass_Block.png'),
                   'title': pygame.image.load('star_title.png'),
                   'solved': pygame.image.load('star_solved.png'),
                   'princess': pygame.image.load('princess.png'),
@@ -73,10 +74,11 @@ def main():
 
     # These dict values are global, and map the character that appears
     # in the level file to the Surface object it represents.
+    # -grayson: switched names for pictures and make grass the inside floor
     TILEMAPPING = {'x': IMAGESDICT['corner'],
                    '#': IMAGESDICT['wall'],
-                   'o': IMAGESDICT['inside floor'],
-                   ' ': IMAGESDICT['outside floor']}
+                   'o': IMAGESDICT['grass_floor'],
+                   ' ': IMAGESDICT['paved_floor']}
     OUTSIDEDECOMAPPING = {'1': IMAGESDICT['rock'],
                           '2': IMAGESDICT['short tree'],
                           '3': IMAGESDICT['tall tree'],
@@ -148,7 +150,6 @@ def runLevel(levels, levelNum):
         # Reset these variables:
         playerMoveTo = None
         keyPressed = False
-
         for event in pygame.event.get(): # event handling loop
             if event.type == QUIT:
                 # Player clicked the "X" at the corner of the window.
@@ -159,13 +160,18 @@ def runLevel(levels, levelNum):
                 keyPressed = True
                 if event.key == K_LEFT:
                     playerMoveTo = LEFT
+                    gameStateObj['playerDir'] = 'l'
+                    print(lookDir)
                 elif event.key == K_RIGHT:
                     playerMoveTo = RIGHT
+                    gameStateObj['playerDir'] = 'r'
                 elif event.key == K_UP:
                     playerMoveTo = UP
+                    gameStateObj['playerDir'] = 'b'
                 elif event.key == K_DOWN:
                     playerMoveTo = DOWN
-
+                    gameStateObj['playerDir'] = 'f'
+                    
                 # Set the camera move mode.
                 elif event.key == K_a:
                     cameraLeft = True
@@ -180,6 +186,9 @@ def runLevel(levels, levelNum):
                     return 'next'
                 elif event.key == K_b:
                     return 'back'
+          # -grayson: added event to debug lookDir
+                elif event.key == K_f:
+                	print(lookDir)
 
                 elif event.key == K_ESCAPE:
                     terminate() # Esc key quits.
@@ -219,6 +228,17 @@ def runLevel(levels, levelNum):
                 levelIsComplete = True
                 keyPressed = False
 
+			# -grayson: this handles the diffrent textures for diffrent looking directions
+            if gameStateObj['playerDir'] == 'l':
+                currentImage = 1
+                print("yes")
+            elif gameStateObj['playerDir'] == 'f':
+                currentImage = 0
+            elif gameStateObj['playerDir'] == 'r':
+                currentImage = 2
+            elif gameStateObj['playerDir'] == 'b':
+                currentImage = 3
+                
         DISPLAYSURF.fill(BGCOLOR)
 
         if mapNeedsRedraw:
@@ -344,6 +364,7 @@ def makeMove(mapObj, gameStateObj, playerMoveTo):
     # The code for handling each of the directions is so similar aside
     # from adding or subtracting 1 to the x/y coordinates. We can
     # simplify it by using the xOffset and yOffset variables.
+    # -grayson: could possibly change player direction here
     if playerMoveTo == UP:
         xOffset = 0
         yOffset = -1
@@ -493,6 +514,7 @@ def readLevelsFile(filename):
             # Create level object and starting game state object.
             gameStateObj = {'player': (startx, starty),
                             'stepCounter': 0,
+                            'playerDir': 'f',
                             'stars': stars}
             levelObj = {'width': maxWidth,
                         'height': len(mapObj),
