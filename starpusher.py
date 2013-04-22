@@ -23,6 +23,7 @@ CAM_MOVE_SPEED = 2 # how many pixels per frame the camera moves
 # decoration on them, such as a tree or rock.
 OUTSIDE_DECORATION_PCT = 20
 
+GREEN      = (  7,  71,  20)
 BRIGHTBLUE = (  0, 170, 255)
 WHITE      = (255, 255, 255)
 BGCOLOR = BRIGHTBLUE
@@ -192,6 +193,7 @@ def runLevel(levels, levelNum):
                     cameraDown = True
 
                 elif event.key == K_n:
+                
                     return 'next'
                 elif event.key == K_b:
                     return 'back'
@@ -317,7 +319,7 @@ def decorateMap(mapObj, startxy):
     # Remove the non-wall characters from the map data
     for x in range(len(mapObjCopy)):
         for y in range(len(mapObjCopy[0])):
-            if mapObjCopy[x][y] in ('$', '.', '@', '+', '*'):
+            if mapObjCopy[x][y] in ('$', '.', '@', '+', '*','x'):
                 mapObjCopy[x][y] = ' '
 
     # Flood fill to determine inside/outside floor tiles.
@@ -327,15 +329,16 @@ def decorateMap(mapObj, startxy):
     for x in range(len(mapObjCopy)):
         for y in range(len(mapObjCopy[0])):
 
-            if mapObjCopy[x][y] == '#':
+            if mapObjCopy[x][y] == ' ' and random.randint(0, 99) < OUTSIDE_DECORATION_PCT:
+                mapObjCopy[x][y] = random.choice(list(OUTSIDEDECOMAPPING.keys()))
+            elif mapObjCopy[x][y] == '#':
                 if (isWall(mapObjCopy, x, y-1) and isWall(mapObjCopy, x+1, y)) or \
                    (isWall(mapObjCopy, x+1, y) and isWall(mapObjCopy, x, y+1)) or \
                    (isWall(mapObjCopy, x, y+1) and isWall(mapObjCopy, x-1, y)) or \
                    (isWall(mapObjCopy, x-1, y) and isWall(mapObjCopy, x, y-1)):
                     mapObjCopy[x][y] = 'x'
 
-            elif mapObjCopy[x][y] == '#' and random.randint(0, 99) < OUTSIDE_DECORATION_PCT:
-                mapObjCopy[x][y] = random.choice(list(OUTSIDEDECOMAPPING.keys()))
+
 
     return mapObjCopy
 
@@ -553,14 +556,14 @@ def floodFill(mapObj, x, y, oldCharacter, newCharacter):
     if mapObj[x][y] == oldCharacter:
         mapObj[x][y] = newCharacter
 
-    if x < len(mapObj) - 1 and mapObj[x+1][y] == oldCharacter:
-        floodFill(mapObj, x+1, y, oldCharacter, newCharacter) # call right
-    if x > 0 and mapObj[x-1][y] == oldCharacter:
-        floodFill(mapObj, x-1, y, oldCharacter, newCharacter) # call left
-    if y < len(mapObj[x]) - 1 and mapObj[x][y+1] == oldCharacter:
-        floodFill(mapObj, x, y+1, oldCharacter, newCharacter) # call down
-    if y > 0 and mapObj[x][y-1] == oldCharacter:
-        floodFill(mapObj, x, y-1, oldCharacter, newCharacter) # call up
+    if x > len(mapObj) - 1 and mapObj[x-1][y] == oldCharacter:
+        floodFill(mapObj, x-1, y, oldCharacter, newCharacter) # call right
+    if x < 0 and mapObj[x+1][y] == oldCharacter:
+        floodFill(mapObj, x+1, y, oldCharacter, newCharacter) # call left
+    if y > len(mapObj[x]) + 1 and mapObj[x][y+1] == oldCharacter:
+        floodFill(mapObj, x, y-1, oldCharacter, newCharacter) # call down
+    if y < 0 and mapObj[x][y+1] == oldCharacter:
+        floodFill(mapObj, x, y+1, oldCharacter, newCharacter) # call up
 
 
 def drawMap(mapObj, gameStateObj, goals):
