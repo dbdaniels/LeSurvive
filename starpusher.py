@@ -36,7 +36,10 @@ RIGHT = 'right'
 lookDir = 'forward'
 
 def main():
-    global FPSCLOCK, DISPLAYSURF, IMAGESDICT, TILEMAPPING, OUTSIDEDECOMAPPING, BASICFONT, PLAYERIMAGES, currentImage, lookDir
+    global FPSCLOCK, DISPLAYSURF, IMAGESDICT, \
+           TILEMAPPING, OUTSIDEDECOMAPPING, BASICFONT, \
+           PLAYERIMAGES, currentImage, lookDir, \
+           playerObj
 
     # Pygame initialization and basic set up of the global variables.
     pygame.init()
@@ -78,7 +81,8 @@ def main():
     TILEMAPPING = {'x': IMAGESDICT['corner'],
                    '#': IMAGESDICT['wall'],
                    'o': IMAGESDICT['grass_floor'],
-                   ' ': IMAGESDICT['paved_floor']}
+                   ' ': IMAGESDICT['paved_floor'],
+                   '-': IMAGESDICT['rock']}
     OUTSIDEDECOMAPPING = {'1': IMAGESDICT['rock'],
                           '2': IMAGESDICT['short tree'],
                           '3': IMAGESDICT['tall tree'],
@@ -92,6 +96,10 @@ def main():
                     IMAGESDICT['catgirl'],
                     IMAGESDICT['horngirl'],
                     IMAGESDICT['pinkgirl']]
+    
+    playerObj = {'lookDir': lookDir,
+                 'x': 0,
+                 'y': 0}
 
     startScreen() # show the title screen until the user presses a key
 
@@ -162,6 +170,7 @@ def runLevel(levels, levelNum):
                     playerMoveTo = LEFT
                     gameStateObj['playerDir'] = 'l'
                     print(lookDir)
+                    print(playerObj['lookDir'])
                 elif event.key == K_RIGHT:
                     playerMoveTo = RIGHT
                     gameStateObj['playerDir'] = 'r'
@@ -325,7 +334,7 @@ def decorateMap(mapObj, startxy):
                    (isWall(mapObjCopy, x-1, y) and isWall(mapObjCopy, x, y-1)):
                     mapObjCopy[x][y] = 'x'
 
-            elif mapObjCopy[x][y] == ' ' and random.randint(0, 99) < OUTSIDE_DECORATION_PCT:
+            elif mapObjCopy[x][y] == '#' and random.randint(0, 99) < OUTSIDE_DECORATION_PCT:
                 mapObjCopy[x][y] = random.choice(list(OUTSIDEDECOMAPPING.keys()))
 
     return mapObjCopy
