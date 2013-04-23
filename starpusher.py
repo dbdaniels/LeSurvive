@@ -81,9 +81,13 @@ def main():
     # -grayson: switched names for pictures and make grass the inside floor
     TILEMAPPING = {'x': IMAGESDICT['corner'],
                    '#': IMAGESDICT['wall'],
-                   'o': IMAGESDICT['grass_floor'],
-                   ' ': IMAGESDICT['paved_floor'],
-                   '-': IMAGESDICT['rock']}
+                   ' ': IMAGESDICT['grass_floor'],
+                   'o': IMAGESDICT['paved_floor'],
+                   '-': IMAGESDICT['rock'],
+                   '1': IMAGESDICT['rock'],
+                   '2': IMAGESDICT['short tree'],
+                   '3': IMAGESDICT['tall tree'],
+                   '4': IMAGESDICT['ugly tree']}
     OUTSIDEDECOMAPPING = {'1': IMAGESDICT['rock'],
                           '2': IMAGESDICT['short tree'],
                           '3': IMAGESDICT['tall tree'],
@@ -297,7 +301,7 @@ def isWall(mapObj, x, y):
     the map is a wall, otherwise return False."""
     if x < 0 or x >= len(mapObj) or y < 0 or y >= len(mapObj[x]):
         return False # x and y aren't actually on the map.
-    elif mapObj[x][y] in ('#', 'x'):
+    elif mapObj[x][y] in ('#', 'x', '1', '2', '3', '4'):
         return True # wall is blocking
     return False
 
@@ -557,6 +561,8 @@ def floodFill(mapObj, x, y, oldCharacter, newCharacter):
     
     #-Derek I flipped all the signs so now they populated the inside tiles
     # with grass and rocks/ No collision....... yet
+    #Edit. Collision but no grass! HMMM perhaps making a texture with grass under
+    #the rock.
     if mapObj[x][y] == oldCharacter:
         mapObj[x][y] = newCharacter
 
