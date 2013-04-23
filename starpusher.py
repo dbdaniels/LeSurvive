@@ -174,8 +174,6 @@ def runLevel(levels, levelNum):
                 if event.key == K_LEFT:
                     playerMoveTo = LEFT
                     gameStateObj['playerDir'] = 'l'
-                    print(lookDir)
-                    print(playerObj['lookDir'])
                 elif event.key == K_RIGHT:
                     playerMoveTo = RIGHT
                     gameStateObj['playerDir'] = 'r'
@@ -246,7 +244,6 @@ def runLevel(levels, levelNum):
 			# -grayson: this handles the diffrent textures for diffrent looking directions
             if gameStateObj['playerDir'] == 'l':
                 currentImage = 1
-                print("yes")
             elif gameStateObj['playerDir'] == 'f':
                 currentImage = 0
             elif gameStateObj['playerDir'] == 'r':
