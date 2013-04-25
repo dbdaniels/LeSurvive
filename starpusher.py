@@ -1,4 +1,4 @@
-# there got all of da files
+#This is a test of my wits
 # Try to run just for shiggles
 # By Al Sweigart al@inventwithpython.com
 # http://inventwithpython.com/pygame
@@ -6,7 +6,7 @@
 import random, sys, copy, os, pygame
 from pygame.locals import *
 
-FPS = 30 # frames per second to update the screen
+FPS = 1 # frames per second to update the screen
 WINWIDTH = 800 # width of the program's window, in pixels
 WINHEIGHT = 600 # height in pixels
 HALF_WINWIDTH = int(WINWIDTH / 2)
@@ -22,6 +22,9 @@ CAM_MOVE_SPEED = 2 # how many pixels per frame the camera moves
 # The percentage of outdoor tiles that have additional
 # decoration on them, such as a tree or rock.
 OUTSIDE_DECORATION_PCT = 20
+
+cameraOffsetY = 0
+cameraOffsetX = 0
 
 GREEN      = (  7,  71,  20)
 BRIGHTBLUE = (  0, 170, 255)
@@ -40,7 +43,7 @@ def main():
     global FPSCLOCK, DISPLAYSURF, IMAGESDICT, \
            TILEMAPPING, OUTSIDEDECOMAPPING, BASICFONT, \
            PLAYERIMAGES, currentImage, lookDir, \
-           playerObj
+           playerObj, cameraOffsetY, cameraOffsetX
 
     # Pygame initialization and basic set up of the global variables.
     pygame.init()
@@ -57,24 +60,23 @@ def main():
 
     # A global dict value that will contain all the Pygame
     # Surface objects returned by pygame.image.load().
-    IMAGESDICT = {'uncovered goal': pygame.image.load('RedSelector.png'),
-                  'covered goal': pygame.image.load('Selector.png'),
-                  'star': pygame.image.load('Star.png'),
-                  'corner': pygame.image.load('Wall_Block_Tall.png'),
-                  'wall': pygame.image.load('Wood_Block_Tall.png'),
-                  'paved_floor': pygame.image.load('Plain_Block.png'),
-                  'grass_floor': pygame.image.load('Grass_Block.png'),
-                  'title': pygame.image.load('star_title.png'),
-                  'solved': pygame.image.load('star_solved.png'),
-                  'princess': pygame.image.load('princess.png'),
-                  'boy': pygame.image.load('boy.png'),
-                  'catgirl': pygame.image.load('catgirl.png'),
-                  'horngirl': pygame.image.load('horngirl.png'),
-                  'pinkgirl': pygame.image.load('pinkgirl.png'),
-                  'rock': pygame.image.load('Rock.png'),
-                  'short tree': pygame.image.load('Tree_Short.png'),
-                  'tall tree': pygame.image.load('Tree_Tall.png'),
-                  'ugly tree': pygame.image.load('Tree_Ugly.png')}
+    IMAGESDICT = {'uncovered goal': pygame.image.load('Pictures/RedSelector.png'),
+                  'covered goal': pygame.image.load('Pictures/Selector.png'),
+                  'star': pygame.image.load('Pictures/Star.png'),
+                  'corner': pygame.image.load('Pictures/Wall_Block_Tall.png'),
+                  'wall': pygame.image.load('Pictures/Wood_Block_Tall.png'),
+                  'paved_floor': pygame.image.load('Pictures/Plain_Block.png'),
+                  'grass_floor': pygame.image.load('Pictures/Grass_Block.png'),
+                  'title': pygame.image.load('Pictures/star_title.png'),
+                  'solved': pygame.image.load('Pictures/star_solved.png'),
+                  'rock': pygame.image.load('Pictures/Rock.png'),
+                  'short tree': pygame.image.load('Pictures/Tree_Short.png'),
+                  'tall tree': pygame.image.load('Pictures/Tree_Tall.png'),
+                  'ugly tree': pygame.image.load('Pictures/Tree_Ugly.png'),
+                  'forwardFace': pygame.image.load('Pictures/Frenchman.png'),
+                  'backFace': pygame.image.load('Pictures/FrenchmanBack.png'),
+                  'rightFace': pygame.image.load('Pictures/FrenchmanRight.png'),
+                  'leftFace': pygame.image.load('Pictures/FrenchmanLeft.png')}
 
     # These dict values are global, and map the character that appears
     # in the level file to the Surface object it represents.
@@ -96,11 +98,10 @@ def main():
     # PLAYERIMAGES is a list of all possible characters the player can be.
     # currentImage is the index of the player's current player image.
     currentImage = 0
-    PLAYERIMAGES = [IMAGESDICT['princess'],
-                    IMAGESDICT['boy'],
-                    IMAGESDICT['catgirl'],
-                    IMAGESDICT['horngirl'],
-                    IMAGESDICT['pinkgirl']]
+    PLAYERIMAGES = [IMAGESDICT['forwardFace'],
+                    IMAGESDICT['leftFace'],
+                    IMAGESDICT['rightFace'],
+                    IMAGESDICT['backFace']]
     
     playerObj = {'lookDir': lookDir,
                  'x': 0,
@@ -118,6 +119,7 @@ def main():
     while True: # main game loop
         # Run the level to actually start playing the game:
         result = runLevel(levels, currentLevelIndex)
+        
 
         if result in ('solved', 'next'):
             # Go to the next level.
@@ -136,7 +138,7 @@ def main():
 
 
 def runLevel(levels, levelNum):
-    global currentImage
+    global currentImage, cameraOffsetY, cameraOffsetX
     levelObj = levels[levelNum]
     mapObj = decorateMap(levelObj['mapObj'], levelObj['startState']['player'])
     gameStateObj = copy.deepcopy(levelObj['startState'])
@@ -150,9 +152,10 @@ def runLevel(levels, levelNum):
     MAX_CAM_Y_PAN = abs(HALF_WINWIDTH - int(mapWidth / 2)) + TILEHEIGHT
 
     levelIsComplete = False
+    centerCameraonStart = True
     # Track how much the camera has moved:
-    cameraOffsetX = 0
-    cameraOffsetY = 0
+    cameraOffsetX = (mapWidth/2)
+    cameraOffsetY = (mapHeight/2)
     # Track if the keys to move the camera are being held down:
     cameraUp = False
     cameraDown = False
@@ -163,6 +166,10 @@ def runLevel(levels, levelNum):
         # Reset these variables:
         playerMoveTo = None
         keyPressed = False
+        if centerCameraonStart:
+            centerCamera( mapWidth, mapHeight, gameStateObj)
+            centerCameraonStart = False
+        
         for event in pygame.event.get(): # event handling loop
             if event.type == QUIT:
                 # Player clicked the "X" at the corner of the window.
@@ -173,16 +180,23 @@ def runLevel(levels, levelNum):
                 keyPressed = True
                 if event.key == K_LEFT:
                     playerMoveTo = LEFT
+#                     centerCamera(mapWidth,mapHeight,gameStateObj)
                     gameStateObj['playerDir'] = 'l'
                 elif event.key == K_RIGHT:
                     playerMoveTo = RIGHT
+#                     centerCamera(mapWidth,mapHeight,gameStateObj)
                     gameStateObj['playerDir'] = 'r'
                 elif event.key == K_UP:
                     playerMoveTo = UP
+#                     centerCamera(mapWidth,mapHeight,gameStateObj)
                     gameStateObj['playerDir'] = 'b'
                 elif event.key == K_DOWN:
                     playerMoveTo = DOWN
+#                     centerCamera(mapWidth,mapHeight,gameStateObj)
                     gameStateObj['playerDir'] = 'f'
+                elif event.key == K_BACKQUOTE:
+                    print (gameStateObj['player'])
+
                     
                 # Set the camera move mode.
                 elif event.key == K_a:
@@ -201,8 +215,10 @@ def runLevel(levels, levelNum):
                     return 'back'
           # -grayson: added event to debug lookDir
                 elif event.key == K_f:
-                	print(lookDir)
-
+                    print(gameStateObj['player'])
+                    plx,ply = gameStateObj['player']
+                    cameraOffsetX = (mapWidth/2) - ((plx * TILEWIDTH)+(TILEWIDTH/2))
+                    cameraOffsetY = (mapHeight/2) - ((ply * 40)+40)
                 elif event.key == K_ESCAPE:
                     terminate() # Esc key quits.
                 elif event.key == K_BACKSPACE:
@@ -233,6 +249,7 @@ def runLevel(levels, levelNum):
 
             if moved:
                 # increment the step counter.
+                centerCamera(mapWidth,mapHeight,gameStateObj)
                 gameStateObj['stepCounter'] += 1
                 mapNeedsRedraw = True
 
@@ -252,6 +269,7 @@ def runLevel(levels, levelNum):
                 currentImage = 3
                 
         DISPLAYSURF.fill(BGCOLOR)
+        
 
         if mapNeedsRedraw:
             mapSurf = drawMap(mapObj, gameStateObj, levelObj['goals'])
@@ -285,6 +303,7 @@ def runLevel(levels, levelNum):
             solvedRect = IMAGESDICT['solved'].get_rect()
             solvedRect.center = (HALF_WINWIDTH, HALF_WINHEIGHT)
             DISPLAYSURF.blit(IMAGESDICT['solved'], solvedRect)
+#change1
 
             if keyPressed:
                 return 'solved'
@@ -330,14 +349,16 @@ def decorateMap(mapObj, startxy):
     for x in range(len(mapObjCopy)):
         for y in range(len(mapObjCopy[0])):
 
-            if mapObjCopy[x][y] == ' ' and random.randint(0, 99) < OUTSIDE_DECORATION_PCT:
-                mapObjCopy[x][y] = random.choice(list(OUTSIDEDECOMAPPING.keys()))
-            elif mapObjCopy[x][y] == '#':
+
+            if mapObjCopy[x][y] == '#':
                 if (isWall(mapObjCopy, x, y-1) and isWall(mapObjCopy, x+1, y)) or \
                    (isWall(mapObjCopy, x+1, y) and isWall(mapObjCopy, x, y+1)) or \
                    (isWall(mapObjCopy, x, y+1) and isWall(mapObjCopy, x-1, y)) or \
                    (isWall(mapObjCopy, x-1, y) and isWall(mapObjCopy, x, y-1)):
                     mapObjCopy[x][y] = 'x'
+            elif mapObjCopy[x][y] == ' ' and random.randint(0, 99) < OUTSIDE_DECORATION_PCT:
+                mapObjCopy[x][y] = random.choice(list(OUTSIDEDECOMAPPING.keys()))
+            
 
 
 
@@ -361,6 +382,7 @@ def isBlocked(mapObj, gameStateObj, x, y):
 
 
 def makeMove(mapObj, gameStateObj, playerMoveTo):
+    global cameraOffsetY, cameraOffsetX
     """Given a map and game state object, see if it is possible for the
     player to make the given move. If it is, then change the player's
     position (and the position of any pushed star). If not, do nothing.
@@ -381,15 +403,19 @@ def makeMove(mapObj, gameStateObj, playerMoveTo):
     if playerMoveTo == UP:
         xOffset = 0
         yOffset = -1
+
     elif playerMoveTo == RIGHT:
         xOffset = 1
         yOffset = 0
+
     elif playerMoveTo == DOWN:
         xOffset = 0
         yOffset = 1
+
     elif playerMoveTo == LEFT:
         xOffset = -1
         yOffset = 0
+ 
 
     # See if the player can move in that direction.
     if isWall(mapObj, playerx + xOffset, playery + yOffset):
@@ -633,6 +659,14 @@ def isLevelFinished(levelObj, gameStateObj):
 def terminate():
     pygame.quit()
     sys.exit()
+
+def centerCamera( mapWidth, mapHeight, gameStateObj):
+    global cameraOffsetY, cameraOffsetX
+    plx,ply = gameStateObj['player']
+    cameraOffsetX = (mapWidth/2) - ((plx * TILEWIDTH)+(TILEWIDTH/2))
+    cameraOffsetY = (mapHeight/2) - ((ply * 40)+40)
+    
+
 
 
 if __name__ == '__main__':
